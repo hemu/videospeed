@@ -13,6 +13,10 @@ var tcDefaults = {
   displayKeyCode: 86,   // default: V
   rememberSpeed: false, // default: false
   startHidden: false,   // default: false
+  // View passes
+  framePassKeyCode: 81,        // default: F
+  frameInterval: 5.0,
+  frameDuration: 1.0,
   blacklist: `
     www.instagram.com
     twitter.com
@@ -90,21 +94,23 @@ function updateShortcutInputText(inputId, keyCode) {
 
 // Saves options to chrome.storage
 function save_options() {
-
-  var speedStep     = document.getElementById('speedStep').value;
-  var rewindTime    = document.getElementById('rewindTime').value;
-  var advanceTime   = document.getElementById('advanceTime').value;
-  var fastSpeed     = document.getElementById('fastSpeed').value;
-  var resetKeyCode  = document.getElementById('resetKeyInput').keyCode;
-  var rewindKeyCode = document.getElementById('rewindKeyInput').keyCode;
+  var speedStep      = document.getElementById('speedStep').value;
+  var rewindTime     = document.getElementById('rewindTime').value;
+  var advanceTime    = document.getElementById('advanceTime').value;
+  var fastSpeed      = document.getElementById('fastSpeed').value;
+  var resetKeyCode   = document.getElementById('resetKeyInput').keyCode;
+  var rewindKeyCode  = document.getElementById('rewindKeyInput').keyCode;
   var advanceKeyCode = document.getElementById('advanceKeyInput').keyCode;
-  var slowerKeyCode = document.getElementById('slowerKeyInput').keyCode;
-  var fasterKeyCode = document.getElementById('fasterKeyInput').keyCode;
-  var fastKeyCode   = document.getElementById('fastKeyInput').keyCode;
+  var slowerKeyCode  = document.getElementById('slowerKeyInput').keyCode;
+  var fasterKeyCode  = document.getElementById('fasterKeyInput').keyCode;
+  var fastKeyCode    = document.getElementById('fastKeyInput').keyCode;
   var displayKeyCode = document.getElementById('displayKeyInput').keyCode;
-  var rememberSpeed = document.getElementById('rememberSpeed').checked;
-  var startHidden = document.getElementById('startHidden').checked;
-  var blacklist     = document.getElementById('blacklist').value;
+  var rememberSpeed  = document.getElementById('rememberSpeed').checked;
+  var startHidden    = document.getElementById('startHidden').checked;
+  var blacklist      = document.getElementById('blacklist').value;
+  var framePassKeyCode = document.getElementById('framePassInput').keyCode;
+  var frameInterval  = document.getElementById('frameInterval').value;
+  var frameDuration  = document.getElementById('frameDuration').value;
 
   speedStep     = isNaN(speedStep) ? tcDefaults.speedStep : Number(speedStep);
   rewindTime    = isNaN(rewindTime) ? tcDefaults.rewindTime : Number(rewindTime);
@@ -117,6 +123,12 @@ function save_options() {
   fasterKeyCode = isNaN(fasterKeyCode) ? tcDefaults.fasterKeyCode : fasterKeyCode;
   fastKeyCode   = isNaN(fastKeyCode) ? tcDefaults.fastKeyCode : fastKeyCode;
   displayKeyCode = isNaN(displayKeyCode) ? tcDefaults.displayKeyCode : displayKeyCode;
+  framePassKeyCode = isNaN(framePassKeyCode) ? 
+    tcDefaults.framePassKeyCode : framePassKeyCode;
+  frameInterval = isNaN(frameInterval) ? 
+    tcDefaults.frameInterval : Number(frameInterval);
+  frameDuration = isNaN(frameDuration) ? 
+    tcDefaults.frameDuration : Number(frameDuration);
 
   chrome.storage.sync.set({
     speedStep:      speedStep,
@@ -132,7 +144,10 @@ function save_options() {
     displayKeyCode: displayKeyCode,
     rememberSpeed:  rememberSpeed,
     startHidden:    startHidden,
-    blacklist:      blacklist.replace(/^\s+|\s+$/gm,'')
+    blacklist:      blacklist.replace(/^\s+|\s+$/gm,''),
+    framePassKeyCode: framePassKeyCode,
+    frameInterval: frameInterval,
+    frameDuration: frameDuration,
   }, function() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
@@ -157,9 +172,12 @@ function restore_options() {
     updateShortcutInputText('fasterKeyInput', storage.fasterKeyCode);
     updateShortcutInputText('fastKeyInput', storage.fastKeyCode);
     updateShortcutInputText('displayKeyInput', storage.displayKeyCode);
+    updateShortcutInputText('framePassInput', storage.framePassKeyCode);
     document.getElementById('rememberSpeed').checked = storage.rememberSpeed;
     document.getElementById('startHidden').checked = storage.startHidden;
     document.getElementById('blacklist').value = storage.blacklist;
+    document.getElementById('frameInterval').value = storage.frameInterval;
+    document.getElementById('frameDuration').value = storage.frameDuration;
   });
 }
 
@@ -194,9 +212,12 @@ document.addEventListener('DOMContentLoaded', function () {
   initShortcutInput('fasterKeyInput');
   initShortcutInput('fastKeyInput');
   initShortcutInput('displayKeyInput');
+  initShortcutInput('framePassInput');
 
   document.getElementById('rewindTime').addEventListener('keypress', inputFilterNumbersOnly);
   document.getElementById('advanceTime').addEventListener('keypress', inputFilterNumbersOnly);
   document.getElementById('speedStep').addEventListener('keypress', inputFilterNumbersOnly);
   document.getElementById('fastSpeed').addEventListener('keypress', inputFilterNumbersOnly);
+  document.getElementById('frameInterval').addEventListener('keypress', inputFilterNumbersOnly);
+  document.getElementById('frameDuration').addEventListener('keypress', inputFilterNumbersOnly);
 })

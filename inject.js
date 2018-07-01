@@ -1,4 +1,12 @@
-chrome.runtime.sendMessage({}, function(response) {
+chrome.runtime.onMessage.addListener((req, sender, sendResp) => {
+  console.log("got a message");
+  console.log(req);
+  console.log(sender);
+  console.log(sendResp);
+  return true;
+});
+
+chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
   var tc = {
     settings: {
       speed: 1.0,           // default 1x
@@ -16,12 +24,17 @@ chrome.runtime.sendMessage({}, function(response) {
       fastKeyCode: 71,      // default: G
       rememberSpeed: false, // default: false
       startHidden: false,   // default: false
+      // View passes
+      framePassKeyCode: 81,        // default: Q
+      frameInterval: 10.0,
+      frameDuration: 4.0,
       blacklist: `
         www.instagram.com
         twitter.com
         vine.co
         imgur.com
-      `.replace(/^\s+|\s+$/gm,'')
+      `.replace(/^\s+|\s+$/gm,''),
+      
     }
   };
 
@@ -42,7 +55,10 @@ chrome.runtime.sendMessage({}, function(response) {
     tc.settings.rememberSpeed = Boolean(storage.rememberSpeed);
     tc.settings.startHidden = Boolean(storage.startHidden);
     tc.settings.blacklist = String(storage.blacklist);
-
+    // View passes
+    tc.settings.framePassKeyCode = String(storage.framePassKeyCode);
+    tc.settings.frameInterval = Number(storage.frameInterval);
+    tc.settings.frameDuration = Number(storage.frameDuration);
     initializeWhenReady(document);
   });
 
@@ -167,6 +183,7 @@ chrome.runtime.sendMessage({}, function(response) {
   }
 
   function initializeWhenReady(document) {
+    console.log("init when ready");
     escapeStringRegExp.matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
     function escapeStringRegExp(str) {
       return str.replace(escapeStringRegExp.matchOperatorsRe, '\\$&');
@@ -212,12 +229,12 @@ chrome.runtime.sendMessage({}, function(response) {
     }
   }
   function initializeNow(document) {
+      console.log("init now");
       // enforce init-once due to redundant callers
       if (!document.body || document.body.classList.contains('vsc-initialized')) {
         return;
       }
       document.body.classList.add('vsc-initialized');
-
       if (document === window.document) {
         defineVideoController();
       } else {
@@ -271,6 +288,8 @@ chrome.runtime.sendMessage({}, function(response) {
             runAction('display', document, true)
           } else if (keyCode == tc.settings.fastKeyCode) {
             runAction('fast', document, true);
+          } else if (keyCode == tc.settings.framePassKeyCode) {
+            runAction('framePass', document, true);
           }
 
           return false;
@@ -330,6 +349,7 @@ chrome.runtime.sendMessage({}, function(response) {
         try { var childDocument = frame.contentDocument } catch (e) { return }
         initializeWhenReady(childDocument);
       });
+
   }
 
   function runAction(action, document, keyboard, e) {
@@ -366,9 +386,37 @@ chrome.runtime.sendMessage({}, function(response) {
           handleDrag(v, controller, e);
         } else if (action === 'fast') {
           resetSpeed(v, tc.settings.fastSpeed);
+        } else if (action === 'framePass') {
+          framePass(v);
         }
       }
     });
+  }
+
+  function advanceNextFrame(v, maxTime) {
+    v.pause();
+    if ((v.currentTime + tc.settings.frameInterval) >= maxTime) {
+      v.currentTime = maxTime;
+      return;
+    }
+    if (v.seeking) {
+      // check again in a little bit
+      console.log("still seeking, going to check again in a bit.");
+      setTimeout(advanceNextFrame, 0.5 * 1000, v, maxTime);
+    } else {
+      v.currentTime = v.currentTime + tc.settings.frameInterval;
+      const nextTime = Math.min(maxTime)
+      setTimeout(advanceNextFrame,
+        tc.settings.frameDuration * 1000,
+        v,
+        maxTime
+      )
+    }
+  }
+
+  function framePass(v) {
+    v.pause();
+    advanceNextFrame(v, v.duration);
   }
 
   function resetSpeed(v, target) {
