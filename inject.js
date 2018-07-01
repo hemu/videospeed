@@ -26,6 +26,7 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
       startHidden: false,   // default: false
       // View passes
       framePassKeyCode: 81,        // default: Q
+      stopFramePassKeyCode: 87,        // default: Q
       frameInterval: 10.0,
       frameDuration: 4.0,
       blacklist: `
@@ -57,6 +58,7 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
     tc.settings.blacklist = String(storage.blacklist);
     // View passes
     tc.settings.framePassKeyCode = String(storage.framePassKeyCode);
+    tc.settings.stopFramePassKeyCode = String(storage.stopFramePassKeyCode);
     tc.settings.frameInterval = Number(storage.frameInterval);
     tc.settings.frameDuration = Number(storage.frameDuration);
     initializeWhenReady(document);
@@ -228,6 +230,7 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
       return true;
     }
   }
+
   function initializeNow(document) {
       console.log("init now");
       // enforce init-once due to redundant callers
@@ -290,6 +293,8 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
             runAction('fast', document, true);
           } else if (keyCode == tc.settings.framePassKeyCode) {
             runAction('framePass', document, true);
+          } else if (keyCode == tc.settings.stopFramePassKeyCode) {
+            runAction('stopFramePass', document, true);
           }
 
           return false;
@@ -388,11 +393,14 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
           resetSpeed(v, tc.settings.fastSpeed);
         } else if (action === 'framePass') {
           framePass(v);
+        } else if (action === 'stopFramePass') {
+          stopFramePass(v);
         }
       }
     });
   }
 
+  let curFramePassTimeout;
   function advanceNextFrame(v, maxTime) {
     v.pause();
     if ((v.currentTime + tc.settings.frameInterval) >= maxTime) {
@@ -400,13 +408,11 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
       return;
     }
     if (v.seeking) {
-      // check again in a little bit
-      console.log("still seeking, going to check again in a bit.");
-      setTimeout(advanceNextFrame, 0.5 * 1000, v, maxTime);
+      curFramePassTimeout = setTimeout(advanceNextFrame, 0.5 * 1000, v, maxTime);
     } else {
       v.currentTime = v.currentTime + tc.settings.frameInterval;
       const nextTime = Math.min(maxTime)
-      setTimeout(advanceNextFrame,
+      curFramePassTimeout = setTimeout(advanceNextFrame,
         tc.settings.frameDuration * 1000,
         v,
         maxTime
@@ -417,6 +423,12 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
   function framePass(v) {
     v.pause();
     advanceNextFrame(v, v.duration);
+  }
+
+  function stopFramePass() {
+    if(curFramePassTimeout) {
+      clearTimeout(curFramePassTimeout);
+    }
   }
 
   function resetSpeed(v, target) {

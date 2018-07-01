@@ -15,6 +15,7 @@ var tcDefaults = {
   startHidden: false,   // default: false
   // View passes
   framePassKeyCode: 81,        // default: F
+  stopFramePassKeyCode: 87,        // default: F
   frameInterval: 5.0,
   frameDuration: 1.0,
   blacklist: `
@@ -109,6 +110,7 @@ function save_options() {
   var startHidden    = document.getElementById('startHidden').checked;
   var blacklist      = document.getElementById('blacklist').value;
   var framePassKeyCode = document.getElementById('framePassInput').keyCode;
+  var stopFramePassKeyCode = document.getElementById('stopFramePassInput').keyCode;
   var frameInterval  = document.getElementById('frameInterval').value;
   var frameDuration  = document.getElementById('frameDuration').value;
 
@@ -125,6 +127,8 @@ function save_options() {
   displayKeyCode = isNaN(displayKeyCode) ? tcDefaults.displayKeyCode : displayKeyCode;
   framePassKeyCode = isNaN(framePassKeyCode) ? 
     tcDefaults.framePassKeyCode : framePassKeyCode;
+  stopFramePassKeyCode = isNaN(stopFramePassKeyCode) ? 
+    tcDefaults.stopFramePassKeyCode : stopFramePassKeyCode;
   frameInterval = isNaN(frameInterval) ? 
     tcDefaults.frameInterval : Number(frameInterval);
   frameDuration = isNaN(frameDuration) ? 
@@ -146,6 +150,7 @@ function save_options() {
     startHidden:    startHidden,
     blacklist:      blacklist.replace(/^\s+|\s+$/gm,''),
     framePassKeyCode: framePassKeyCode,
+    stopFramePassKeyCode: stopFramePassKeyCode,
     frameInterval: frameInterval,
     frameDuration: frameDuration,
   }, function() {
@@ -173,6 +178,7 @@ function restore_options() {
     updateShortcutInputText('fastKeyInput', storage.fastKeyCode);
     updateShortcutInputText('displayKeyInput', storage.displayKeyCode);
     updateShortcutInputText('framePassInput', storage.framePassKeyCode);
+    updateShortcutInputText('stopFramePassInput', storage.stopFramePassKeyCode);
     document.getElementById('rememberSpeed').checked = storage.rememberSpeed;
     document.getElementById('startHidden').checked = storage.startHidden;
     document.getElementById('blacklist').value = storage.blacklist;
@@ -213,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initShortcutInput('fastKeyInput');
   initShortcutInput('displayKeyInput');
   initShortcutInput('framePassInput');
+  initShortcutInput('stopFramePassInput');
 
   document.getElementById('rewindTime').addEventListener('keypress', inputFilterNumbersOnly);
   document.getElementById('advanceTime').addEventListener('keypress', inputFilterNumbersOnly);
