@@ -1,11 +1,3 @@
-chrome.runtime.onMessage.addListener((req, sender, sendResp) => {
-  console.log("got a message");
-  console.log(req);
-  console.log(sender);
-  console.log(sendResp);
-  return true;
-});
-
 chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
   var tc = {
     settings: {
@@ -185,7 +177,6 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
   }
 
   function initializeWhenReady(document) {
-    console.log("init when ready");
     escapeStringRegExp.matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
     function escapeStringRegExp(str) {
       return str.replace(escapeStringRegExp.matchOperatorsRe, '\\$&');
@@ -232,7 +223,6 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
   }
 
   function initializeNow(document) {
-      console.log("init now");
       // enforce init-once due to redundant callers
       if (!document.body || document.body.classList.contains('vsc-initialized')) {
         return;
@@ -295,6 +285,8 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
             runAction('framePass', document, true);
           } else if (keyCode == tc.settings.stopFramePassKeyCode) {
             runAction('stopFramePass', document, true);
+          } else if (keyCode == 84) {
+            runAction('getText', document, true);
           }
 
           return false;
@@ -395,6 +387,55 @@ chrome.runtime.sendMessage({hmm: 'hey'}, function(response) {
           framePass(v);
         } else if (action === 'stopFramePass') {
           stopFramePass(v);
+        } else if (action === 'getText') {
+            if (v.src.includes('youtube')) {
+              // if youtube, just click on the open trascript option :D
+              const moreBtn = document.querySelector('#menu-container > #menu > ytd-menu-renderer > #button');
+              if (moreBtn) {
+                moreBtn.click();
+                setTimeout(() => {
+                  const openTranscriptBtn = document.querySelector('#items > ytd-menu-service-item-renderer:nth-child(2)');
+                  if (openTranscriptBtn) openTranscriptBtn.click();
+                }, 500);
+
+                document.styleSheets[0].addRule(".cue.ytd-transcript-body-renderer:hover, .cue.active.ytd-transcript-body-renderer", "font-size: 2.7em; color: #fb3962; font-weight: bold; background-color: white !important; line-height: 1.1em;");
+                document.styleSheets[0].addRule(".cue-group.ytd-transcript-body-renderer:not(:first-child)", "margin-top: 0");
+
+              }
+            } else if (window.location.href.includes('coursera')) {
+              v.parentElement.style.display = 'inline-block';
+              v.parentElement.style.width = '70%';
+              text = document.querySelector(`#rendered-content > div > div > div.rc-LegacyDataFetch > div > div.rc-ItemNavigation > div > div.flex-1 > div > div > div > div > div.extras.horizontal-box.align-items-top.wrap > div.flex-3.main-column > div > div > div > div.bt3-col-md-12`);
+              text.style.display = 'inline-block';
+              text.style.float = 'right';
+              text.style.width = '30%';
+              text.style["background-color"] = '#FFF';
+              text.style.overflow = 'scroll';
+              text.style.height = '600px';
+              text.style.left= '16px';
+              text.style["scroll-behavior"] = "smooth";
+
+              document.styleSheets[0].addRule("div .rc-Phrase.active,.rc-Phrase:hover", "font-size: 170%; color: #fb3962; font-weight: bold; text-decoration: none !important;");
+
+              const scrollTimer = setInterval(() => {
+                const activeElem = document.querySelector('div .rc-Phrase.active,.rc-Phrase:hover')
+                if(activeElem) {
+                  const topPos = activeElem.offsetTop;
+                  text.scrollTop = topPos - 150;
+                }
+                // document.querySelector('div .rc-Phrase.active,.rc-Phrase:hover').scrollIntoView({block: "center", behavior: "smooth"});
+              }, 1500);
+
+              v.parentElement.parentElement.insertBefore(text, v.parentElement.nextSibling)
+            } else {
+              textTrack = v.textTracks ? v.textTracks[0] : null;
+              text = "";
+              if (textTrack) {
+                for(let cue of textTrack.cues) {
+                  text += `${cue.text} `;
+                }
+              }
+            }
         }
       }
     });
