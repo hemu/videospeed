@@ -130,6 +130,23 @@
         </select>
       </div>
 
+      <div class="row customs" id="previewPass">
+        <select class="customDo">
+          <option value="previewPass">Preview Pass</option>
+        </select>
+        <input
+          class="customKey"
+          type="text"
+          value=""
+          placeholder="press a key"
+        />
+        <input class="customValue" type="text" placeholder="value (0.10)" />
+        <select class="customForce">
+          <option value="false">Do not disable website key bindings</option>
+          <option value="true">Disable website key bindings</option>
+        </select>
+      </div>
+
       <button id="add">Add New</button>
     </section>
 
@@ -159,6 +176,14 @@
       <div class="row">
         <label for="controllerOpacity">Controller opacity</label>
         <input id="controllerOpacity" type="text" value="" />
+      </div>
+      <div class="row">
+        <label for="previewSkipInterval">Preview Skip Interval</label>
+        <input id="previewSkipInterval" type="text" value="" />
+      </div>
+      <div class="row">
+        <label for="previewDuration">Preview Duration</label>
+        <input id="previewDuration" type="text" value="" />
       </div>
       <div class="row">
         <label for="blacklist"

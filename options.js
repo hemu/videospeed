@@ -9,6 +9,8 @@ var tcDefaults = {
   forceLastSavedSpeed: false, //default: false
   enabled: true, // default enabled
   controllerOpacity: 0.3, // default: 0.3
+  previewSkipInterval: 10.0,
+  previewDuration: 1.0,
   keyBindings: [
     { action: "display", key: 86, value: 0, force: false, predefined: true }, // V
     { action: "slower", key: 83, value: 0.1, force: false, predefined: true }, // S
@@ -16,7 +18,8 @@ var tcDefaults = {
     { action: "rewind", key: 90, value: 10, force: false, predefined: true }, // Z
     { action: "advance", key: 88, value: 10, force: false, predefined: true }, // X
     { action: "reset", key: 82, value: 1, force: false, predefined: true }, // R
-    { action: "fast", key: 71, value: 1.8, force: false, predefined: true } // G
+    { action: "fast", key: 71, value: 1.8, force: false, predefined: true }, // G
+    { action: "previewPass", key: 81, value: 0, force: false, predefined: true } // Q
   ],
   blacklist: `www.instagram.com
     twitter.com
@@ -127,7 +130,7 @@ function updateCustomShortcutInputText(inputItem, keyCode) {
 }
 
 // List of custom actions for which customValue should be disabled
-var customActionsNoValues = ["pause", "muted", "mark", "jump", "display"];
+var customActionsNoValues = ["pause", "muted", "mark", "jump", "display", "previewPass"];
 
 function add_shortcut() {
   var html = `<select class="customDo">
@@ -224,6 +227,8 @@ function save_options() {
   var startHidden = document.getElementById("startHidden").checked;
   var controllerOpacity = document.getElementById("controllerOpacity").value;
   var blacklist = document.getElementById("blacklist").value;
+  var previewSkipInterval = document.getElementById("previewSkipInterval").value;
+  var previewDuration = document.getElementById("previewDuration").value;
 
   chrome.storage.sync.remove([
     "resetSpeed",
@@ -236,7 +241,8 @@ function save_options() {
     "fasterKeyCode",
     "rewindKeyCode",
     "advanceKeyCode",
-    "fastKeyCode"
+    "fastKeyCode",
+    "previewPassKeyCode"
   ]);
   chrome.storage.sync.set(
     {
@@ -247,7 +253,9 @@ function save_options() {
       startHidden: startHidden,
       controllerOpacity: controllerOpacity,
       keyBindings: keyBindings,
-      blacklist: blacklist.replace(regStrip, "")
+      blacklist: blacklist.replace(regStrip, ""),
+      previewSkipInterval: previewSkipInterval,
+      previewDuration: previewDuration
     },
     function () {
       // Update status to let user know options were saved.
@@ -271,6 +279,10 @@ function restore_options() {
     document.getElementById("controllerOpacity").value =
       storage.controllerOpacity;
     document.getElementById("blacklist").value = storage.blacklist;
+    document.getElementById("previewSkipInterval").value =
+      storage.previewSkipInterval;
+    document.getElementById("previewDuration").value =
+      storage.previewDuration;
 
     // ensure that there is a "display" binding for upgrades from versions that had it as a separate binding
     if (storage.keyBindings.filter((x) => x.action == "display").length == 0) {

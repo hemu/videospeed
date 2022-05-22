@@ -22,7 +22,9 @@ var tc = {
       teams.microsoft.com
     `.replace(regStrip, ""),
     defaultLogLevel: 4,
-    logLevel: 3
+    logLevel: 3,
+    previewSkipInterval: 10.0,
+    previewDuration: 2.0,
   },
 
   // Holds a reference to all of the AUDIO/VIDEO DOM elements we've attached to
@@ -105,6 +107,14 @@ chrome.storage.sync.get(tc.settings, function (storage) {
       force: false,
       predefined: true
     }); // default: G
+    tc.settings.keyBindings.push({
+      action: 'previewPass',
+      key: Number(storage.previewPassKeyCode) || 81,
+      value: Number(storage.previewPass) || 0,
+      force: false,
+      predefined: true
+    }) // default: Q
+
     tc.settings.version = "0.5.3";
 
     chrome.storage.sync.set({
@@ -117,7 +127,9 @@ chrome.storage.sync.get(tc.settings, function (storage) {
       startHidden: tc.settings.startHidden,
       enabled: tc.settings.enabled,
       controllerOpacity: tc.settings.controllerOpacity,
-      blacklist: tc.settings.blacklist.replace(regStrip, "")
+      blacklist: tc.settings.blacklist.replace(regStrip, ""),
+      previewSkipInterval: tc.settings.previewSkipInterval,
+      previewDuration: tc.settings.previewDuration,
     });
   }
   tc.settings.lastSpeed = Number(storage.lastSpeed);
@@ -129,6 +141,8 @@ chrome.storage.sync.get(tc.settings, function (storage) {
   tc.settings.startHidden = Boolean(storage.startHidden);
   tc.settings.controllerOpacity = Number(storage.controllerOpacity);
   tc.settings.blacklist = String(storage.blacklist);
+  tc.settings.previewSkipInterval = Number(storage.previewSkipInterval);
+  tc.settings.previewDuration = Number(storage.previewDuration);
 
   // ensure that there is a "display" binding (for upgrades from versions that had it as a separate binding)
   if (
@@ -812,6 +826,8 @@ function runAction(action, value, e) {
         setMark(v);
       } else if (action === "jump") {
         jumpToMark(v);
+      } else if (action === 'previewPass') {
+        previewPass(v);
       }
     }
   });
@@ -863,6 +879,31 @@ function jumpToMark(v) {
   if (v.vsc.mark && typeof v.vsc.mark === "number") {
     v.currentTime = v.vsc.mark;
   }
+}
+
+function advanceNextFrame(v, maxTime) {
+  v.pause();
+  if ((v.currentTime + tc.settings.previewSkipInterval) >= maxTime) {
+    v.currentTime = maxTime;
+    return;
+  }
+  if (v.seeking) {
+    // check again a bit later
+    setTimeout(advanceNextFrame, 0.5 * 1000, v, maxTime);
+  } else {
+    v.currentTime = v.currentTime + tc.settings.previewSkipInterval;
+    // const nextTime = Math.min(maxTime)
+    setTimeout(advanceNextFrame,
+      tc.settings.previewDuration * 1000,
+      v,
+      maxTime
+    )
+  }
+}
+
+function previewPass(v) {
+  v.pause();
+  advanceNextFrame(v, v.duration);
 }
 
 function handleDrag(video, e) {

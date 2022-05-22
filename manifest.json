@@ -1,6 +1,6 @@
 {
-  "name": "Video Speed Controller",
-  "short_name": "videospeed",
+  "name": "Viewie",
+  "short_name": "viewie",
   "version": "0.7.1",
   "manifest_version": 3,
   "minimum_chrome_version": "89",
