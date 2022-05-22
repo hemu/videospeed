@@ -113,7 +113,14 @@ chrome.storage.sync.get(tc.settings, function (storage) {
       value: Number(storage.previewPass) || 0,
       force: false,
       predefined: true
-    }) // default: Q
+    }); // default: Q
+    tc.settings.keyBindings.push({
+      action: 'previewPassStop',
+      key: Number(storage.previewPassStopKeyCode) || 87,
+      value: Number(storage.previewPassStop) || 0,
+      force: false,
+      predefined: true
+    }); // default: W
 
     tc.settings.version = "0.5.3";
 
@@ -828,6 +835,8 @@ function runAction(action, value, e) {
         jumpToMark(v);
       } else if (action === 'previewPass') {
         previewPass(v);
+      } else if (action === 'previewPassStop') {
+        previewPassStop();
       }
     }
   });
@@ -881,6 +890,7 @@ function jumpToMark(v) {
   }
 }
 
+let curPreviewPassTimeout;
 function advanceNextFrame(v, maxTime) {
   v.pause();
   if ((v.currentTime + tc.settings.previewSkipInterval) >= maxTime) {
@@ -889,11 +899,11 @@ function advanceNextFrame(v, maxTime) {
   }
   if (v.seeking) {
     // check again a bit later
-    setTimeout(advanceNextFrame, 0.5 * 1000, v, maxTime);
+    curPreviewPassTimeout = setTimeout(advanceNextFrame, 0.5 * 1000, v, maxTime);
   } else {
     v.currentTime = v.currentTime + tc.settings.previewSkipInterval;
     // const nextTime = Math.min(maxTime)
-    setTimeout(advanceNextFrame,
+    curPreviewPassTimeout = setTimeout(advanceNextFrame,
       tc.settings.previewDuration * 1000,
       v,
       maxTime
@@ -904,6 +914,12 @@ function advanceNextFrame(v, maxTime) {
 function previewPass(v) {
   v.pause();
   advanceNextFrame(v, v.duration);
+}
+
+function previewPassStop() {
+  if (curPreviewPassTimeout) {
+    clearTimeout(curPreviewPassTimeout);
+  }
 }
 
 function handleDrag(video, e) {

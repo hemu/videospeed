@@ -19,7 +19,8 @@ var tcDefaults = {
     { action: "advance", key: 88, value: 10, force: false, predefined: true }, // X
     { action: "reset", key: 82, value: 1, force: false, predefined: true }, // R
     { action: "fast", key: 71, value: 1.8, force: false, predefined: true }, // G
-    { action: "previewPass", key: 81, value: 0, force: false, predefined: true } // Q
+    { action: "previewPass", key: 81, value: 0, force: false, predefined: true }, // Q
+    { action: "previewPassStop", key: 87, value: 0, force: false, predefined: true } // W
   ],
   blacklist: `www.instagram.com
     twitter.com
@@ -130,7 +131,9 @@ function updateCustomShortcutInputText(inputItem, keyCode) {
 }
 
 // List of custom actions for which customValue should be disabled
-var customActionsNoValues = ["pause", "muted", "mark", "jump", "display", "previewPass"];
+var customActionsNoValues = [
+  "pause", "muted", "mark", "jump", "display", "previewPass", "previewPassStop"
+];
 
 function add_shortcut() {
   var html = `<select class="customDo">
@@ -242,7 +245,8 @@ function save_options() {
     "rewindKeyCode",
     "advanceKeyCode",
     "fastKeyCode",
-    "previewPassKeyCode"
+    "previewPassKeyCode",
+    "previewPassStopKeyCode"
   ]);
   chrome.storage.sync.set(
     {
